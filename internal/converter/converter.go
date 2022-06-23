@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/alecthomas/jsonschema"
-	"github.com/chrusty/protoc-gen-jsonschema/internal/protos"
 	"github.com/sirupsen/logrus"
 	"github.com/xeipuuv/gojsonschema"
+	"github.com/zbiljic/protoc-gen-jsonschema/internal/protos"
 	gengo "google.golang.org/protobuf/cmd/protoc-gen-go/internal_gengo"
 	"google.golang.org/protobuf/proto"
 	descriptor "google.golang.org/protobuf/types/descriptorpb"

@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/alecthomas/jsonschema"
-	"github.com/chrusty/protoc-gen-jsonschema/internal/protos"
 	"github.com/iancoleman/orderedmap"
 	"github.com/xeipuuv/gojsonschema"
+	"github.com/zbiljic/protoc-gen-jsonschema/internal/protos"
 	"google.golang.org/protobuf/proto"
 	descriptor "google.golang.org/protobuf/types/descriptorpb"
 )
