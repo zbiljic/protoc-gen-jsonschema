@@ -8,9 +8,10 @@ import (
 	"github.com/alecthomas/jsonschema"
 	"github.com/iancoleman/orderedmap"
 	"github.com/xeipuuv/gojsonschema"
-	"github.com/zbiljic/protoc-gen-jsonschema/internal/protos"
 	"google.golang.org/protobuf/proto"
 	descriptor "google.golang.org/protobuf/types/descriptorpb"
+
+	"github.com/zbiljic/protoc-gen-jsonschema/internal/protos"
 )
 
 var (

@@ -13,11 +13,12 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/xeipuuv/gojsonschema"
-	"github.com/zbiljic/protoc-gen-jsonschema/internal/protos"
 	gengo "google.golang.org/protobuf/cmd/protoc-gen-go/internal_gengo"
 	"google.golang.org/protobuf/proto"
 	descriptor "google.golang.org/protobuf/types/descriptorpb"
 	plugin "google.golang.org/protobuf/types/pluginpb"
+
+	"github.com/zbiljic/protoc-gen-jsonschema/internal/protos"
 )
 
 const (
