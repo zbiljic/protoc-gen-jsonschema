@@ -27,7 +27,7 @@ const WellKnown = `{
                     "items": {
                         "type": "integer",
                         "title": "Int 32 Value",
-                        "description": "Wrapper message for ` + "`int32`" + `. The JSON representation for ` + "`Int32Value`" + ` is JSON number."
+                        "description": "Wrapper message for ` + "`int32`" + `. The JSON representation for ` + "`Int32Value`" + ` is JSON number. Not recommended for use in new APIs, but still useful for legacy APIs and has no plan to be removed."
                     },
                     "type": "array"
                 },

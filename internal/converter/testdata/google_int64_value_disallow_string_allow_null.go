@@ -16,7 +16,7 @@ const GoogleInt64ValueDisallowStringAllowNull = `{
                         }
                     ],
                     "title": "Int 64 Value",
-                    "description": "Wrapper message for ` + "`int64`" + `. The JSON representation for ` + "`Int64Value`" + ` is JSON string."
+                    "description": "Wrapper message for ` + "`int64`" + `. The JSON representation for ` + "`Int64Value`" + ` is JSON string. Not recommended for use in new APIs, but still useful for legacy APIs and has no plan to be removed."
                 }
             },
             "additionalProperties": true,
