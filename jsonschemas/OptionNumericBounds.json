@@ -1,0 +1,40 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/OptionNumericBounds",
+    "definitions": {
+        "OptionNumericBounds": {
+            "properties": {
+                "quantity": {
+                    "type": "integer",
+                    "description": "Integer with inclusive bounds",
+                    "maximum": 100,
+                    "minimum": 1
+                },
+                "price": {
+                    "type": "number",
+                    "description": "Float with exclusive minimum and inclusive maximum",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1000000
+                },
+                "rating": {
+                    "type": "number",
+                    "description": "Float with both inclusive bounds",
+                    "maximum": 5,
+                    "minimum": 0
+                },
+                "percentage": {
+                    "type": "integer",
+                    "description": "Integer with exclusive bounds",
+                    "exclusiveMaximum": 100,
+                    "exclusiveMinimum": 0
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Option Numeric Bounds"
+        }
+    }
+}

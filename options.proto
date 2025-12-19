@@ -25,6 +25,18 @@ message FieldOptions {
 
   // Fields tagged with this will constrain strings using the "pattern" keyword in generated schemas
   string pattern = 5;
+
+  // Fields tagged with this will constrain numbers using the "minimum" keyword in generated schemas (inclusive lower bound)
+  optional double minimum = 6;
+
+  // Fields tagged with this will constrain numbers using the "maximum" keyword in generated schemas (inclusive upper bound)
+  optional double maximum = 7;
+
+  // Fields tagged with this will constrain numbers using the "exclusiveMinimum" keyword in generated schemas (exclusive lower bound)
+  optional double exclusive_minimum = 8;
+
+  // Fields tagged with this will constrain numbers using the "exclusiveMaximum" keyword in generated schemas (exclusive upper bound)
+  optional double exclusive_maximum = 9;
 }
 
 

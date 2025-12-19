@@ -1,0 +1,31 @@
+syntax = "proto3";
+package samples;
+import "options.proto";
+
+message OptionNumericBounds {
+  // Integer with inclusive bounds
+  int32 quantity = 1 [
+    (protoc.gen.jsonschema.field_options).minimum = 1,
+    (protoc.gen.jsonschema.field_options).maximum = 100
+  ];
+
+  // Float with exclusive minimum and inclusive maximum
+  double price = 2 [
+    (protoc.gen.jsonschema.field_options).exclusive_minimum = 0.0,
+    (protoc.gen.jsonschema.field_options).maximum = 1000000.0
+  ];
+
+  // Float with both inclusive bounds
+  float rating = 3 [
+    (protoc.gen.jsonschema.field_options).minimum = 0.0,
+    (protoc.gen.jsonschema.field_options).maximum = 5.0
+  ];
+
+  // Integer with exclusive bounds
+  int32 percentage = 4 [
+    (protoc.gen.jsonschema.field_options).exclusive_minimum = 0,
+    (protoc.gen.jsonschema.field_options).exclusive_maximum = 100
+  ];
+
+  string name = 5;
+}

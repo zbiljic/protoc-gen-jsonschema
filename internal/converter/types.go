@@ -90,13 +90,51 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 	// Float32:
 	case descriptor.FieldDescriptorProto_TYPE_DOUBLE,
 		descriptor.FieldDescriptorProto_TYPE_FLOAT:
+		numberDef := &jsonschema.Type{Type: gojsonschema.TYPE_NUMBER}
+
+		// Custom field options from protoc-gen-jsonschema:
+		if opt := proto.GetExtension(desc.GetOptions(), protoc_gen_jsonschema.E_FieldOptions); opt != nil {
+			if fieldOptions, ok := opt.(*protoc_gen_jsonschema.FieldOptions); ok && fieldOptions != nil {
+				// Use Extras for all numeric constraints to support zero values
+				if fieldOptions.Minimum != nil {
+					if numberDef.Extras == nil {
+						numberDef.Extras = make(map[string]interface{})
+					}
+					numberDef.Extras["minimum"] = *fieldOptions.Minimum
+				}
+				if fieldOptions.Maximum != nil {
+					if numberDef.Extras == nil {
+						numberDef.Extras = make(map[string]interface{})
+					}
+					numberDef.Extras["maximum"] = *fieldOptions.Maximum
+				}
+				if fieldOptions.ExclusiveMinimum != nil {
+					// Draft-06+ semantics: exclusiveMinimum is a numeric value
+					c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+					if numberDef.Extras == nil {
+						numberDef.Extras = make(map[string]interface{})
+					}
+					numberDef.Extras["exclusiveMinimum"] = *fieldOptions.ExclusiveMinimum
+				}
+				if fieldOptions.ExclusiveMaximum != nil {
+					// Draft-06+ semantics: exclusiveMaximum is a numeric value
+					c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+					if numberDef.Extras == nil {
+						numberDef.Extras = make(map[string]interface{})
+					}
+					numberDef.Extras["exclusiveMaximum"] = *fieldOptions.ExclusiveMaximum
+				}
+			}
+		}
+
 		if messageFlags.AllowNullValues {
 			jsonSchemaType.OneOf = []*jsonschema.Type{
 				{Type: gojsonschema.TYPE_NULL},
-				{Type: gojsonschema.TYPE_NUMBER},
+				numberDef,
 			}
 		} else {
-			jsonSchemaType.Type = gojsonschema.TYPE_NUMBER
+			jsonSchemaType.Type = numberDef.Type
+			jsonSchemaType.Extras = numberDef.Extras
 		}
 
 	// Int32:
@@ -105,13 +143,51 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 		descriptor.FieldDescriptorProto_TYPE_FIXED32,
 		descriptor.FieldDescriptorProto_TYPE_SFIXED32,
 		descriptor.FieldDescriptorProto_TYPE_SINT32:
+		integerDef := &jsonschema.Type{Type: gojsonschema.TYPE_INTEGER}
+
+		// Custom field options from protoc-gen-jsonschema:
+		if opt := proto.GetExtension(desc.GetOptions(), protoc_gen_jsonschema.E_FieldOptions); opt != nil {
+			if fieldOptions, ok := opt.(*protoc_gen_jsonschema.FieldOptions); ok && fieldOptions != nil {
+				// Use Extras for all numeric constraints to support zero values
+				if fieldOptions.Minimum != nil {
+					if integerDef.Extras == nil {
+						integerDef.Extras = make(map[string]interface{})
+					}
+					integerDef.Extras["minimum"] = *fieldOptions.Minimum
+				}
+				if fieldOptions.Maximum != nil {
+					if integerDef.Extras == nil {
+						integerDef.Extras = make(map[string]interface{})
+					}
+					integerDef.Extras["maximum"] = *fieldOptions.Maximum
+				}
+				if fieldOptions.ExclusiveMinimum != nil {
+					// Draft-06+ semantics: exclusiveMinimum is a numeric value
+					c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+					if integerDef.Extras == nil {
+						integerDef.Extras = make(map[string]interface{})
+					}
+					integerDef.Extras["exclusiveMinimum"] = *fieldOptions.ExclusiveMinimum
+				}
+				if fieldOptions.ExclusiveMaximum != nil {
+					// Draft-06+ semantics: exclusiveMaximum is a numeric value
+					c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+					if integerDef.Extras == nil {
+						integerDef.Extras = make(map[string]interface{})
+					}
+					integerDef.Extras["exclusiveMaximum"] = *fieldOptions.ExclusiveMaximum
+				}
+			}
+		}
+
 		if messageFlags.AllowNullValues {
 			jsonSchemaType.OneOf = []*jsonschema.Type{
 				{Type: gojsonschema.TYPE_NULL},
-				{Type: gojsonschema.TYPE_INTEGER},
+				integerDef,
 			}
 		} else {
-			jsonSchemaType.Type = gojsonschema.TYPE_INTEGER
+			jsonSchemaType.Type = integerDef.Type
+			jsonSchemaType.Extras = integerDef.Extras
 		}
 
 	// Int64:
@@ -123,13 +199,51 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 
 		// As integer:
 		if c.Flags.DisallowBigIntsAsStrings {
+			int64Def := &jsonschema.Type{Type: gojsonschema.TYPE_INTEGER}
+
+			// Custom field options from protoc-gen-jsonschema:
+			if opt := proto.GetExtension(desc.GetOptions(), protoc_gen_jsonschema.E_FieldOptions); opt != nil {
+				if fieldOptions, ok := opt.(*protoc_gen_jsonschema.FieldOptions); ok && fieldOptions != nil {
+					// Use Extras for all numeric constraints to support zero values
+					if fieldOptions.Minimum != nil {
+						if int64Def.Extras == nil {
+							int64Def.Extras = make(map[string]interface{})
+						}
+						int64Def.Extras["minimum"] = *fieldOptions.Minimum
+					}
+					if fieldOptions.Maximum != nil {
+						if int64Def.Extras == nil {
+							int64Def.Extras = make(map[string]interface{})
+						}
+						int64Def.Extras["maximum"] = *fieldOptions.Maximum
+					}
+					if fieldOptions.ExclusiveMinimum != nil {
+						// Draft-06+ semantics: exclusiveMinimum is a numeric value
+						c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+						if int64Def.Extras == nil {
+							int64Def.Extras = make(map[string]interface{})
+						}
+						int64Def.Extras["exclusiveMinimum"] = *fieldOptions.ExclusiveMinimum
+					}
+					if fieldOptions.ExclusiveMaximum != nil {
+						// Draft-06+ semantics: exclusiveMaximum is a numeric value
+						c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+						if int64Def.Extras == nil {
+							int64Def.Extras = make(map[string]interface{})
+						}
+						int64Def.Extras["exclusiveMaximum"] = *fieldOptions.ExclusiveMaximum
+					}
+				}
+			}
+
 			if messageFlags.AllowNullValues {
 				jsonSchemaType.OneOf = []*jsonschema.Type{
-					{Type: gojsonschema.TYPE_INTEGER},
+					int64Def,
 					{Type: gojsonschema.TYPE_NULL},
 				}
 			} else {
-				jsonSchemaType.Type = gojsonschema.TYPE_INTEGER
+				jsonSchemaType.Type = int64Def.Type
+				jsonSchemaType.Extras = int64Def.Extras
 			}
 		}
 
@@ -151,7 +265,7 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 
 		// Custom field options from protoc-gen-jsonschema:
 		if opt := proto.GetExtension(desc.GetOptions(), protoc_gen_jsonschema.E_FieldOptions); opt != nil {
-			if fieldOptions, ok := opt.(*protoc_gen_jsonschema.FieldOptions); ok {
+			if fieldOptions, ok := opt.(*protoc_gen_jsonschema.FieldOptions); ok && fieldOptions != nil {
 				stringDef.MinLength = int(fieldOptions.GetMinLength())
 				stringDef.MaxLength = int(fieldOptions.GetMaxLength())
 				stringDef.Pattern = fieldOptions.GetPattern()
@@ -608,7 +722,7 @@ func (c *Converter) recursiveConvertMessageType(curPkg *ProtoPackage, msgDesc *d
 
 		// Custom field options from protoc-gen-jsonschema:
 		if opt := proto.GetExtension(fieldDesc.GetOptions(), protoc_gen_jsonschema.E_FieldOptions); opt != nil {
-			if fieldOptions, ok := opt.(*protoc_gen_jsonschema.FieldOptions); ok {
+			if fieldOptions, ok := opt.(*protoc_gen_jsonschema.FieldOptions); ok && fieldOptions != nil {
 
 				// "Ignored" fields are simply skipped:
 				if fieldOptions.GetIgnore() {
