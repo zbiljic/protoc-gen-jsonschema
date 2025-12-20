@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "enum": [
+        "HttpMethodUnspecified",
+        "HttpMethodGet",
+        "HttpMethodPost",
+        "HttpMethodPut",
+        "HttpMethodDelete"
+    ],
+    "type": "string",
+    "title": "Http Method",
+    "description": "Test enum with CamelCase but no trim_prefix"
+}

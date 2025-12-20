@@ -55,6 +55,7 @@ type ConverterFlags struct {
 	EnumsAsConstants             bool
 	EnumsAsStringsOnly           bool
 	EnumsTrimPrefix              bool
+	EnumsAsCamelCase             bool
 	KeepNewLinesInDescription    bool
 	PrefixSchemaFilesWithPackage bool
 	UseJSONFieldnamesOnly        bool
@@ -169,6 +170,11 @@ func (c *Converter) convertEnumType(enum *descriptor.EnumDescriptorProto, conver
 					converterFlags.EnumsTrimPrefix = true
 				}
 
+				// ENUM values as CamelCase:
+				if enumOptions.GetEnumsAsCamelCase() {
+					converterFlags.EnumsAsCamelCase = true
+				}
+
 				// If this particular ENUM is marked with the "ignore" option then return a skipped error:
 				if enumOptions.GetIgnore() {
 					c.logger.WithField("msg_name", enum.GetName()).Debug("Skipping ignored enum")
@@ -219,6 +225,11 @@ func (c *Converter) convertEnumType(enum *descriptor.EnumDescriptorProto, conver
 		// If enum name prefix should be removed from enum value name:
 		if converterFlags.EnumsTrimPrefix {
 			valueName = strings.TrimPrefix(valueName, enumNamePrefix)
+		}
+
+		// If enum values should be converted to CamelCase:
+		if converterFlags.EnumsAsCamelCase {
+			valueName = toCamelCase(valueName)
 		}
 
 		// If we're using constants for ENUMs then add these here, along with their title:
@@ -447,4 +458,32 @@ func contains(haystack []string, needle string) bool {
 	}
 
 	return false
+}
+
+// toCamelCase converts SCREAMING_SNAKE_CASE to CamelCase
+// Examples:
+//   PLACED_IN_POCKET → PlacedInPocket
+//   FOOD_CONSUMPTION → FoodConsumption
+//   NO_ACTION → NoAction
+func toCamelCase(s string) string {
+	if s == "" {
+		return s
+	}
+
+	parts := strings.Split(s, "_")
+	result := ""
+
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+		// Capitalize first letter, lowercase rest
+		if len(part) == 1 {
+			result += strings.ToUpper(part)
+		} else {
+			result += strings.ToUpper(part[0:1]) + strings.ToLower(part[1:])
+		}
+	}
+
+	return result
 }

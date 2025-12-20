@@ -91,6 +91,9 @@ message EnumOptions {
 
   // Enums tagged with this will not be processed
   bool ignore = 4;
+
+  // Enums tagged with this will have values converted to CamelCase format (after trim_prefix if enabled)
+  bool enums_as_camel_case = 5;
 }
 
 

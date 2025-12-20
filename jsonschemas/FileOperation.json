@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "enum": [
+        "Unspecified",
+        "Create",
+        "Read",
+        "Update",
+        "Delete",
+        "List"
+    ],
+    "type": "string",
+    "title": "File Operation",
+    "description": "Test enum with CamelCase formatting enabled"
+}

@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package samples;
+
+import "options.proto";
+
+// Test enum with CamelCase formatting enabled
+enum FileOperation {
+  option (protoc.gen.jsonschema.enum_options).enums_as_strings_only = true;
+  option (protoc.gen.jsonschema.enum_options).enums_trim_prefix = true;
+  option (protoc.gen.jsonschema.enum_options).enums_as_camel_case = true;
+
+  FILE_OPERATION_UNSPECIFIED = 0;
+  FILE_OPERATION_CREATE = 1;
+  FILE_OPERATION_READ = 2;
+  FILE_OPERATION_UPDATE = 3;
+  FILE_OPERATION_DELETE = 4;
+  FILE_OPERATION_LIST = 5;
+}
+
+// Test enum with CamelCase but no trim_prefix
+enum HttpMethod {
+  option (protoc.gen.jsonschema.enum_options).enums_as_strings_only = true;
+  option (protoc.gen.jsonschema.enum_options).enums_as_camel_case = true;
+
+  HTTP_METHOD_UNSPECIFIED = 0;
+  HTTP_METHOD_GET = 1;
+  HTTP_METHOD_POST = 2;
+  HTTP_METHOD_PUT = 3;
+  HTTP_METHOD_DELETE = 4;
+}
+
+// Test enum without CamelCase (control case)
+enum LogLevel {
+  option (protoc.gen.jsonschema.enum_options).enums_as_strings_only = true;
+  option (protoc.gen.jsonschema.enum_options).enums_trim_prefix = true;
+
+  LOG_LEVEL_UNSPECIFIED = 0;
+  LOG_LEVEL_TRACE = 1;
+  LOG_LEVEL_DEBUG = 2;
+  LOG_LEVEL_INFO = 3;
+  LOG_LEVEL_WARN = 4;
+  LOG_LEVEL_ERROR = 5;
+}

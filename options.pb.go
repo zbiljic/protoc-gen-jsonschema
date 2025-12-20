@@ -309,9 +309,11 @@ type EnumOptions struct {
 	// Enums tagged with this will have enum name prefix removed from values:
 	EnumsTrimPrefix bool `protobuf:"varint,3,opt,name=enums_trim_prefix,json=enumsTrimPrefix,proto3" json:"enums_trim_prefix,omitempty"`
 	// Enums tagged with this will not be processed
-	Ignore        bool `protobuf:"varint,4,opt,name=ignore,proto3" json:"ignore,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Ignore bool `protobuf:"varint,4,opt,name=ignore,proto3" json:"ignore,omitempty"`
+	// Enums tagged with this will have values converted to CamelCase format (after trim_prefix if enabled)
+	EnumsAsCamelCase bool `protobuf:"varint,5,opt,name=enums_as_camel_case,json=enumsAsCamelCase,proto3" json:"enums_as_camel_case,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *EnumOptions) Reset() {
@@ -368,6 +370,13 @@ func (x *EnumOptions) GetEnumsTrimPrefix() bool {
 func (x *EnumOptions) GetIgnore() bool {
 	if x != nil {
 		return x.Ignore
+	}
+	return false
+}
+
+func (x *EnumOptions) GetEnumsAsCamelCase() bool {
+	if x != nil {
+		return x.EnumsAsCamelCase
 	}
 	return false
 }
@@ -465,12 +474,13 @@ const file_options_proto_rawDesc = "" +
 	"\x11allow_null_values\x18\x03 \x01(\bR\x0fallowNullValues\x12D\n" +
 	"\x1edisallow_additional_properties\x18\x04 \x01(\bR\x1cdisallowAdditionalProperties\x12,\n" +
 	"\x12enums_as_constants\x18\x05 \x01(\bR\x10enumsAsConstants\x12,\n" +
-	"\x12oneof_convert_into\x18\x06 \x01(\tR\x10oneofConvertInto\"\xb2\x01\n" +
+	"\x12oneof_convert_into\x18\x06 \x01(\tR\x10oneofConvertInto\"\xe1\x01\n" +
 	"\vEnumOptions\x12,\n" +
 	"\x12enums_as_constants\x18\x01 \x01(\bR\x10enumsAsConstants\x121\n" +
 	"\x15enums_as_strings_only\x18\x02 \x01(\bR\x12enumsAsStringsOnly\x12*\n" +
 	"\x11enums_trim_prefix\x18\x03 \x01(\bR\x0fenumsTrimPrefix\x12\x16\n" +
-	"\x06ignore\x18\x04 \x01(\bR\x06ignore:h\n" +
+	"\x06ignore\x18\x04 \x01(\bR\x06ignore\x12-\n" +
+	"\x13enums_as_camel_case\x18\x05 \x01(\bR\x10enumsAsCamelCase:h\n" +
 	"\rfield_options\x12\x1d.google.protobuf.FieldOptions\x18\xe5\b \x01(\v2#.protoc.gen.jsonschema.FieldOptionsR\ffieldOptions:d\n" +
 	"\ffile_options\x12\x1c.google.protobuf.FileOptions\x18\xe6\b \x01(\v2\".protoc.gen.jsonschema.FileOptionsR\vfileOptions:p\n" +
 	"\x0fmessage_options\x12\x1f.google.protobuf.MessageOptions\x18\xe7\b \x01(\v2%.protoc.gen.jsonschema.MessageOptionsR\x0emessageOptions:d\n" +

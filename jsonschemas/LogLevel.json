@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "enum": [
+        "UNSPECIFIED",
+        "TRACE",
+        "DEBUG",
+        "INFO",
+        "WARN",
+        "ERROR"
+    ],
+    "type": "string",
+    "title": "Log Level",
+    "description": "Test enum without CamelCase (control case)"
+}
