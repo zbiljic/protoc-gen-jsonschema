@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package samples;
+
+import "options.proto";
+
+// This message demonstrates the use of the const field option
+message FieldConstExample {
+  // String constant
+  string type = 1 [(protoc.gen.jsonschema.field_options).const = "example"];
+
+  // Integer constant
+  int32 version = 2 [(protoc.gen.jsonschema.field_options).const = "42"];
+
+  // Boolean constant
+  bool enabled = 3 [(protoc.gen.jsonschema.field_options).const = "true"];
+
+  // Float constant
+  double ratio = 4 [(protoc.gen.jsonschema.field_options).const = "3.14"];
+
+  // Regular field without const
+  string name = 5;
+}

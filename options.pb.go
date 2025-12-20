@@ -47,8 +47,10 @@ type FieldOptions struct {
 	ExclusiveMinimum *float64 `protobuf:"fixed64,8,opt,name=exclusive_minimum,json=exclusiveMinimum,proto3,oneof" json:"exclusive_minimum,omitempty"`
 	// Fields tagged with this will constrain numbers using the "exclusiveMaximum" keyword in generated schemas (exclusive upper bound)
 	ExclusiveMaximum *float64 `protobuf:"fixed64,9,opt,name=exclusive_maximum,json=exclusiveMaximum,proto3,oneof" json:"exclusive_maximum,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Fields tagged with this will be constrained to a constant value in generated schemas (parsed based on field type)
+	Const         string `protobuf:"bytes,10,opt,name=const,proto3" json:"const,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *FieldOptions) Reset() {
@@ -142,6 +144,13 @@ func (x *FieldOptions) GetExclusiveMaximum() float64 {
 		return *x.ExclusiveMaximum
 	}
 	return 0
+}
+
+func (x *FieldOptions) GetConst() string {
+	if x != nil {
+		return x.Const
+	}
+	return ""
 }
 
 // Custom FileOptions
@@ -417,7 +426,7 @@ var File_options_proto protoreflect.FileDescriptor
 
 const file_options_proto_rawDesc = "" +
 	"\n" +
-	"\roptions.proto\x12\x15protoc.gen.jsonschema\x1a google/protobuf/descriptor.proto\"\x80\x03\n" +
+	"\roptions.proto\x12\x15protoc.gen.jsonschema\x1a google/protobuf/descriptor.proto\"\x96\x03\n" +
 	"\fFieldOptions\x12\x16\n" +
 	"\x06ignore\x18\x01 \x01(\bR\x06ignore\x12\x1a\n" +
 	"\brequired\x18\x02 \x01(\bR\brequired\x12\x1d\n" +
@@ -429,7 +438,9 @@ const file_options_proto_rawDesc = "" +
 	"\aminimum\x18\x06 \x01(\x01H\x00R\aminimum\x88\x01\x01\x12\x1d\n" +
 	"\amaximum\x18\a \x01(\x01H\x01R\amaximum\x88\x01\x01\x120\n" +
 	"\x11exclusive_minimum\x18\b \x01(\x01H\x02R\x10exclusiveMinimum\x88\x01\x01\x120\n" +
-	"\x11exclusive_maximum\x18\t \x01(\x01H\x03R\x10exclusiveMaximum\x88\x01\x01B\n" +
+	"\x11exclusive_maximum\x18\t \x01(\x01H\x03R\x10exclusiveMaximum\x88\x01\x01\x12\x14\n" +
+	"\x05const\x18\n" +
+	" \x01(\tR\x05constB\n" +
 	"\n" +
 	"\b_minimumB\n" +
 	"\n" +

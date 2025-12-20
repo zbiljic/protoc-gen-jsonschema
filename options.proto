@@ -37,6 +37,9 @@ message FieldOptions {
 
   // Fields tagged with this will constrain numbers using the "exclusiveMaximum" keyword in generated schemas (exclusive upper bound)
   optional double exclusive_maximum = 9;
+
+  // Fields tagged with this will be constrained to a constant value in generated schemas (parsed based on field type)
+  string const = 10;
 }
 
 

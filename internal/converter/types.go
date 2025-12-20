@@ -3,6 +3,7 @@ package converter
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/alecthomas/jsonschema"
@@ -124,6 +125,19 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 					}
 					numberDef.Extras["exclusiveMaximum"] = *fieldOptions.ExclusiveMaximum
 				}
+				// Handle const option
+				if constValue := fieldOptions.GetConst(); constValue != "" {
+					parsedValue, err := parseConstValue(constValue, desc.GetType())
+					if err != nil {
+						return nil, fmt.Errorf("cannot parse const value '%s' as type %s for field '%s': %w",
+							constValue, desc.GetType(), desc.GetName(), err)
+					}
+					if numberDef.Extras == nil {
+						numberDef.Extras = make(map[string]interface{})
+					}
+					numberDef.Extras["const"] = parsedValue
+					c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+				}
 			}
 		}
 
@@ -176,6 +190,19 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 						integerDef.Extras = make(map[string]interface{})
 					}
 					integerDef.Extras["exclusiveMaximum"] = *fieldOptions.ExclusiveMaximum
+				}
+				// Handle const option
+				if constValue := fieldOptions.GetConst(); constValue != "" {
+					parsedValue, err := parseConstValue(constValue, desc.GetType())
+					if err != nil {
+						return nil, fmt.Errorf("cannot parse const value '%s' as type %s for field '%s': %w",
+							constValue, desc.GetType(), desc.GetName(), err)
+					}
+					if integerDef.Extras == nil {
+						integerDef.Extras = make(map[string]interface{})
+					}
+					integerDef.Extras["const"] = parsedValue
+					c.schemaVersion = "http://json-schema.org/draft-06/schema#"
 				}
 			}
 		}
@@ -233,6 +260,19 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 						}
 						int64Def.Extras["exclusiveMaximum"] = *fieldOptions.ExclusiveMaximum
 					}
+					// Handle const option
+					if constValue := fieldOptions.GetConst(); constValue != "" {
+						parsedValue, err := parseConstValue(constValue, desc.GetType())
+						if err != nil {
+							return nil, fmt.Errorf("cannot parse const value '%s' as type %s for field '%s': %w",
+								constValue, desc.GetType(), desc.GetName(), err)
+						}
+						if int64Def.Extras == nil {
+							int64Def.Extras = make(map[string]interface{})
+						}
+						int64Def.Extras["const"] = parsedValue
+						c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+					}
 				}
 			}
 
@@ -269,6 +309,19 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 				stringDef.MinLength = int(fieldOptions.GetMinLength())
 				stringDef.MaxLength = int(fieldOptions.GetMaxLength())
 				stringDef.Pattern = fieldOptions.GetPattern()
+				// Handle const option
+				if constValue := fieldOptions.GetConst(); constValue != "" {
+					parsedValue, err := parseConstValue(constValue, desc.GetType())
+					if err != nil {
+						return nil, fmt.Errorf("cannot parse const value '%s' as type %s for field '%s': %w",
+							constValue, desc.GetType(), desc.GetName(), err)
+					}
+					if stringDef.Extras == nil {
+						stringDef.Extras = make(map[string]interface{})
+					}
+					stringDef.Extras["const"] = parsedValue
+					c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+				}
 			}
 		}
 
@@ -293,6 +346,7 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 			jsonSchemaType.MinLength = stringDef.MinLength
 			jsonSchemaType.MaxLength = stringDef.MaxLength
 			jsonSchemaType.Pattern = stringDef.Pattern
+			jsonSchemaType.Extras = stringDef.Extras
 		}
 
 	// Bytes:
@@ -336,13 +390,35 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 
 	// Bool:
 	case descriptor.FieldDescriptorProto_TYPE_BOOL:
+		boolDef := &jsonschema.Type{Type: gojsonschema.TYPE_BOOLEAN}
+
+		// Custom field options from protoc-gen-jsonschema:
+		if opt := proto.GetExtension(desc.GetOptions(), protoc_gen_jsonschema.E_FieldOptions); opt != nil {
+			if fieldOptions, ok := opt.(*protoc_gen_jsonschema.FieldOptions); ok && fieldOptions != nil {
+				// Handle const option
+				if constValue := fieldOptions.GetConst(); constValue != "" {
+					parsedValue, err := parseConstValue(constValue, desc.GetType())
+					if err != nil {
+						return nil, fmt.Errorf("cannot parse const value '%s' as type %s for field '%s': %w",
+							constValue, desc.GetType(), desc.GetName(), err)
+					}
+					if boolDef.Extras == nil {
+						boolDef.Extras = make(map[string]interface{})
+					}
+					boolDef.Extras["const"] = parsedValue
+					c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+				}
+			}
+		}
+
 		if messageFlags.AllowNullValues {
 			jsonSchemaType.OneOf = []*jsonschema.Type{
 				{Type: gojsonschema.TYPE_NULL},
-				{Type: gojsonschema.TYPE_BOOLEAN},
+				boolDef,
 			}
 		} else {
-			jsonSchemaType.Type = gojsonschema.TYPE_BOOLEAN
+			jsonSchemaType.Type = boolDef.Type
+			jsonSchemaType.Extras = boolDef.Extras
 		}
 
 	// Group (object):
@@ -822,4 +898,70 @@ func dedupe(inputStrings []string) []string {
 		}
 	}
 	return outputStrings
+}
+
+// parseConstValue parses a string const value into the appropriate Go type based on the proto field type
+func parseConstValue(constStr string, protoType descriptor.FieldDescriptorProto_Type) (interface{}, error) {
+	switch protoType {
+	case descriptor.FieldDescriptorProto_TYPE_STRING:
+		return constStr, nil
+
+	case descriptor.FieldDescriptorProto_TYPE_INT32,
+		descriptor.FieldDescriptorProto_TYPE_SINT32,
+		descriptor.FieldDescriptorProto_TYPE_SFIXED32:
+		val, err := strconv.ParseInt(constStr, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("invalid int32 value: %w", err)
+		}
+		return int32(val), nil
+
+	case descriptor.FieldDescriptorProto_TYPE_INT64,
+		descriptor.FieldDescriptorProto_TYPE_SINT64,
+		descriptor.FieldDescriptorProto_TYPE_SFIXED64:
+		val, err := strconv.ParseInt(constStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid int64 value: %w", err)
+		}
+		return val, nil
+
+	case descriptor.FieldDescriptorProto_TYPE_UINT32,
+		descriptor.FieldDescriptorProto_TYPE_FIXED32:
+		val, err := strconv.ParseUint(constStr, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("invalid uint32 value: %w", err)
+		}
+		return uint32(val), nil
+
+	case descriptor.FieldDescriptorProto_TYPE_UINT64,
+		descriptor.FieldDescriptorProto_TYPE_FIXED64:
+		val, err := strconv.ParseUint(constStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid uint64 value: %w", err)
+		}
+		return val, nil
+
+	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
+		val, err := strconv.ParseFloat(constStr, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid double value: %w", err)
+		}
+		return val, nil
+
+	case descriptor.FieldDescriptorProto_TYPE_FLOAT:
+		val, err := strconv.ParseFloat(constStr, 32)
+		if err != nil {
+			return nil, fmt.Errorf("invalid float value: %w", err)
+		}
+		return float32(val), nil
+
+	case descriptor.FieldDescriptorProto_TYPE_BOOL:
+		val, err := strconv.ParseBool(constStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid bool value: %w", err)
+		}
+		return val, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported type for const: %s", protoType)
+	}
 }
