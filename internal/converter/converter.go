@@ -232,6 +232,17 @@ func (c *Converter) convertEnumType(enum *descriptor.EnumDescriptorProto, conver
 			valueName = toCamelCase(valueName)
 		}
 
+		// Check for per-value const override:
+		if opts := value.GetOptions(); opts != nil && proto.HasExtension(opts, protoc_gen_jsonschema.E_EnumValueOptions) {
+			if opt := proto.GetExtension(opts, protoc_gen_jsonschema.E_EnumValueOptions); opt != nil {
+				if enumValueOptions, ok := opt.(*protoc_gen_jsonschema.EnumValueOptions); ok {
+					if constValue := enumValueOptions.GetConst(); constValue != "" {
+						valueName = constValue
+					}
+				}
+			}
+		}
+
 		// If we're using constants for ENUMs then add these here, along with their title:
 		if converterFlags.EnumsAsConstants {
 			c.schemaVersion = versionDraft06 // Const requires draft-06

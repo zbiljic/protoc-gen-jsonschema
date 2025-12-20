@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package samples;
+
+import "options.proto";
+
+// Test enum with custom const values for specific entries
+// This demonstrates using const override to express values that
+// can't be represented as valid proto identifiers (e.g., containing '+')
+enum OrderStatus {
+  option (protoc.gen.jsonschema.enum_options).enums_as_strings_only = true;
+  option (protoc.gen.jsonschema.enum_options).enums_trim_prefix = true;
+  option (protoc.gen.jsonschema.enum_options).enums_as_camel_case = true;
+
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_PENDING = 1;
+
+  // Uses const override to express "Confirmed+Payment" which can't be a proto identifier
+  ORDER_STATUS_CONFIRMED_PAYMENT = 2 [(protoc.gen.jsonschema.enum_value_options).const = "Confirmed+Payment"];
+
+  // Uses const override to express "Confirmed+Shipped"
+  ORDER_STATUS_CONFIRMED_SHIPPED = 3 [(protoc.gen.jsonschema.enum_value_options).const = "Confirmed+Shipped"];
+
+  ORDER_STATUS_IN_TRANSIT = 4;
+  ORDER_STATUS_DELIVERED = 5;
+  ORDER_STATUS_COMPLETED = 6;
+  ORDER_STATUS_CANCELLED = 7;
+}

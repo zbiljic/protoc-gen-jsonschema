@@ -381,6 +381,52 @@ func (x *EnumOptions) GetEnumsAsCamelCase() bool {
 	return false
 }
 
+// Custom EnumValueOptions
+type EnumValueOptions struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Enum values tagged with this will use a custom const value in generated schemas
+	Const         string `protobuf:"bytes,1,opt,name=const,proto3" json:"const,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EnumValueOptions) Reset() {
+	*x = EnumValueOptions{}
+	mi := &file_options_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EnumValueOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnumValueOptions) ProtoMessage() {}
+
+func (x *EnumValueOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_options_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnumValueOptions.ProtoReflect.Descriptor instead.
+func (*EnumValueOptions) Descriptor() ([]byte, []int) {
+	return file_options_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *EnumValueOptions) GetConst() string {
+	if x != nil {
+		return x.Const
+	}
+	return ""
+}
+
 var file_options_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
 		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
@@ -414,6 +460,14 @@ var file_options_proto_extTypes = []protoimpl.ExtensionInfo{
 		Tag:           "bytes,1128,opt,name=enum_options",
 		Filename:      "options.proto",
 	},
+	{
+		ExtendedType:  (*descriptorpb.EnumValueOptions)(nil),
+		ExtensionType: (*EnumValueOptions)(nil),
+		Field:         1129,
+		Name:          "protoc.gen.jsonschema.enum_value_options",
+		Tag:           "bytes,1129,opt,name=enum_value_options",
+		Filename:      "options.proto",
+	},
 }
 
 // Extension fields to descriptorpb.FieldOptions.
@@ -438,6 +492,12 @@ var (
 var (
 	// optional protoc.gen.jsonschema.EnumOptions enum_options = 1128;
 	E_EnumOptions = &file_options_proto_extTypes[3]
+)
+
+// Extension fields to descriptorpb.EnumValueOptions.
+var (
+	// optional protoc.gen.jsonschema.EnumValueOptions enum_value_options = 1129;
+	E_EnumValueOptions = &file_options_proto_extTypes[4]
 )
 
 var File_options_proto protoreflect.FileDescriptor
@@ -480,11 +540,14 @@ const file_options_proto_rawDesc = "" +
 	"\x15enums_as_strings_only\x18\x02 \x01(\bR\x12enumsAsStringsOnly\x12*\n" +
 	"\x11enums_trim_prefix\x18\x03 \x01(\bR\x0fenumsTrimPrefix\x12\x16\n" +
 	"\x06ignore\x18\x04 \x01(\bR\x06ignore\x12-\n" +
-	"\x13enums_as_camel_case\x18\x05 \x01(\bR\x10enumsAsCamelCase:h\n" +
+	"\x13enums_as_camel_case\x18\x05 \x01(\bR\x10enumsAsCamelCase\"(\n" +
+	"\x10EnumValueOptions\x12\x14\n" +
+	"\x05const\x18\x01 \x01(\tR\x05const:h\n" +
 	"\rfield_options\x12\x1d.google.protobuf.FieldOptions\x18\xe5\b \x01(\v2#.protoc.gen.jsonschema.FieldOptionsR\ffieldOptions:d\n" +
 	"\ffile_options\x12\x1c.google.protobuf.FileOptions\x18\xe6\b \x01(\v2\".protoc.gen.jsonschema.FileOptionsR\vfileOptions:p\n" +
 	"\x0fmessage_options\x12\x1f.google.protobuf.MessageOptions\x18\xe7\b \x01(\v2%.protoc.gen.jsonschema.MessageOptionsR\x0emessageOptions:d\n" +
-	"\fenum_options\x12\x1c.google.protobuf.EnumOptions\x18\xe8\b \x01(\v2\".protoc.gen.jsonschema.EnumOptionsR\venumOptionsB*Z(github.com/zbiljic/protoc-gen-jsonschemab\x06proto3"
+	"\fenum_options\x12\x1c.google.protobuf.EnumOptions\x18\xe8\b \x01(\v2\".protoc.gen.jsonschema.EnumOptionsR\venumOptions:y\n" +
+	"\x12enum_value_options\x12!.google.protobuf.EnumValueOptions\x18\xe9\b \x01(\v2'.protoc.gen.jsonschema.EnumValueOptionsR\x10enumValueOptionsB*Z(github.com/zbiljic/protoc-gen-jsonschemab\x06proto3"
 
 var (
 	file_options_proto_rawDescOnce sync.Once
@@ -498,31 +561,35 @@ func file_options_proto_rawDescGZIP() []byte {
 	return file_options_proto_rawDescData
 }
 
-var file_options_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_options_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_options_proto_goTypes = []any{
-	(*FieldOptions)(nil),                // 0: protoc.gen.jsonschema.FieldOptions
-	(*FileOptions)(nil),                 // 1: protoc.gen.jsonschema.FileOptions
-	(*MessageOptions)(nil),              // 2: protoc.gen.jsonschema.MessageOptions
-	(*EnumOptions)(nil),                 // 3: protoc.gen.jsonschema.EnumOptions
-	(*descriptorpb.FieldOptions)(nil),   // 4: google.protobuf.FieldOptions
-	(*descriptorpb.FileOptions)(nil),    // 5: google.protobuf.FileOptions
-	(*descriptorpb.MessageOptions)(nil), // 6: google.protobuf.MessageOptions
-	(*descriptorpb.EnumOptions)(nil),    // 7: google.protobuf.EnumOptions
+	(*FieldOptions)(nil),                  // 0: protoc.gen.jsonschema.FieldOptions
+	(*FileOptions)(nil),                   // 1: protoc.gen.jsonschema.FileOptions
+	(*MessageOptions)(nil),                // 2: protoc.gen.jsonschema.MessageOptions
+	(*EnumOptions)(nil),                   // 3: protoc.gen.jsonschema.EnumOptions
+	(*EnumValueOptions)(nil),              // 4: protoc.gen.jsonschema.EnumValueOptions
+	(*descriptorpb.FieldOptions)(nil),     // 5: google.protobuf.FieldOptions
+	(*descriptorpb.FileOptions)(nil),      // 6: google.protobuf.FileOptions
+	(*descriptorpb.MessageOptions)(nil),   // 7: google.protobuf.MessageOptions
+	(*descriptorpb.EnumOptions)(nil),      // 8: google.protobuf.EnumOptions
+	(*descriptorpb.EnumValueOptions)(nil), // 9: google.protobuf.EnumValueOptions
 }
 var file_options_proto_depIdxs = []int32{
-	4, // 0: protoc.gen.jsonschema.field_options:extendee -> google.protobuf.FieldOptions
-	5, // 1: protoc.gen.jsonschema.file_options:extendee -> google.protobuf.FileOptions
-	6, // 2: protoc.gen.jsonschema.message_options:extendee -> google.protobuf.MessageOptions
-	7, // 3: protoc.gen.jsonschema.enum_options:extendee -> google.protobuf.EnumOptions
-	0, // 4: protoc.gen.jsonschema.field_options:type_name -> protoc.gen.jsonschema.FieldOptions
-	1, // 5: protoc.gen.jsonschema.file_options:type_name -> protoc.gen.jsonschema.FileOptions
-	2, // 6: protoc.gen.jsonschema.message_options:type_name -> protoc.gen.jsonschema.MessageOptions
-	3, // 7: protoc.gen.jsonschema.enum_options:type_name -> protoc.gen.jsonschema.EnumOptions
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	4, // [4:8] is the sub-list for extension type_name
-	0, // [0:4] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	5,  // 0: protoc.gen.jsonschema.field_options:extendee -> google.protobuf.FieldOptions
+	6,  // 1: protoc.gen.jsonschema.file_options:extendee -> google.protobuf.FileOptions
+	7,  // 2: protoc.gen.jsonschema.message_options:extendee -> google.protobuf.MessageOptions
+	8,  // 3: protoc.gen.jsonschema.enum_options:extendee -> google.protobuf.EnumOptions
+	9,  // 4: protoc.gen.jsonschema.enum_value_options:extendee -> google.protobuf.EnumValueOptions
+	0,  // 5: protoc.gen.jsonschema.field_options:type_name -> protoc.gen.jsonschema.FieldOptions
+	1,  // 6: protoc.gen.jsonschema.file_options:type_name -> protoc.gen.jsonschema.FileOptions
+	2,  // 7: protoc.gen.jsonschema.message_options:type_name -> protoc.gen.jsonschema.MessageOptions
+	3,  // 8: protoc.gen.jsonschema.enum_options:type_name -> protoc.gen.jsonschema.EnumOptions
+	4,  // 9: protoc.gen.jsonschema.enum_value_options:type_name -> protoc.gen.jsonschema.EnumValueOptions
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	5,  // [5:10] is the sub-list for extension type_name
+	0,  // [0:5] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_options_proto_init() }
@@ -537,8 +604,8 @@ func file_options_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_options_proto_rawDesc), len(file_options_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
-			NumExtensions: 4,
+			NumMessages:   5,
+			NumExtensions: 5,
 			NumServices:   0,
 		},
 		GoTypes:           file_options_proto_goTypes,

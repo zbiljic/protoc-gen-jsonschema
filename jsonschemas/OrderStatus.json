@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "enum": [
+        "Unspecified",
+        "Pending",
+        "Confirmed+Payment",
+        "Confirmed+Shipped",
+        "InTransit",
+        "Delivered",
+        "Completed",
+        "Cancelled"
+    ],
+    "type": "string",
+    "title": "Order Status",
+    "description": "Test enum with custom const values for specific entries This demonstrates using const override to express values that can't be represented as valid proto identifiers (e.g., containing '+')"
+}

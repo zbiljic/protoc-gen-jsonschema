@@ -85,7 +85,7 @@ message EnumOptions {
 
   // Enums tagged with this will only provide string values as options (not their numerical equivalents):
   bool enums_as_strings_only = 2;
-  
+
   // Enums tagged with this will have enum name prefix removed from values:
   bool enums_trim_prefix = 3;
 
@@ -94,6 +94,14 @@ message EnumOptions {
 
   // Enums tagged with this will have values converted to CamelCase format (after trim_prefix if enabled)
   bool enums_as_camel_case = 5;
+}
+
+
+// Custom EnumValueOptions
+message EnumValueOptions {
+
+  // Enum values tagged with this will use a custom const value in generated schemas
+  string const = 1;
 }
 
 
@@ -111,4 +119,8 @@ extend google.protobuf.MessageOptions {
 
 extend google.protobuf.EnumOptions {
   EnumOptions enum_options = 1128;
+}
+
+extend google.protobuf.EnumValueOptions {
+  EnumValueOptions enum_value_options = 1129;
 }
