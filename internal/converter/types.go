@@ -587,6 +587,17 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 // Converts a proto "MESSAGE" into a JSON-Schema:
 func (c *Converter) convertMessageType(curPkg *ProtoPackage, msgDesc *descriptor.DescriptorProto) (*jsonschema.Schema, error) {
 
+	// Check for oneof_convert_into message option
+	if opts := msgDesc.GetOptions(); opts != nil && proto.HasExtension(opts, protoc_gen_jsonschema.E_MessageOptions) {
+		if opt := proto.GetExtension(opts, protoc_gen_jsonschema.E_MessageOptions); opt != nil {
+			if messageOptions, ok := opt.(*protoc_gen_jsonschema.MessageOptions); ok {
+				if oneofConvertInto := messageOptions.GetOneofConvertInto(); oneofConvertInto != "" {
+					return c.convertMessageWithOneOf(curPkg, msgDesc, oneofConvertInto)
+				}
+			}
+		}
+	}
+
 	// Get a list of any nested messages in our schema:
 	duplicatedMessages, err := c.findNestedMessages(curPkg, msgDesc)
 	if err != nil {
@@ -671,6 +682,17 @@ func (c *Converter) recursiveFindNestedMessages(curPkg *ProtoPackage, msgDesc *d
 }
 
 func (c *Converter) recursiveConvertMessageType(curPkg *ProtoPackage, msgDesc *descriptor.DescriptorProto, pkgName string, duplicatedMessages map[*descriptor.DescriptorProto]string, ignoreDuplicatedMessages bool) (*jsonschema.Type, error) {
+
+	// Check for oneof_convert_into option first
+	if opts := msgDesc.GetOptions(); opts != nil && proto.HasExtension(opts, protoc_gen_jsonschema.E_MessageOptions) {
+		if opt := proto.GetExtension(opts, protoc_gen_jsonschema.E_MessageOptions); opt != nil {
+			if messageOptions, ok := opt.(*protoc_gen_jsonschema.MessageOptions); ok {
+				if oneofConvertInto := messageOptions.GetOneofConvertInto(); oneofConvertInto != "" {
+					return c.convertMessageTypeWithOneOf(curPkg, msgDesc, oneofConvertInto)
+				}
+			}
+		}
+	}
 
 	// Prepare a new jsonschema:
 	jsonSchemaType := new(jsonschema.Type)
@@ -964,4 +986,429 @@ func parseConstValue(constStr string, protoType descriptor.FieldDescriptorProto_
 	default:
 		return nil, fmt.Errorf("unsupported type for const: %s", protoType)
 	}
+}
+
+// convertMessageWithOneOf handles messages with oneof_convert_into option
+func (c *Converter) convertMessageWithOneOf(
+	curPkg *ProtoPackage,
+	msgDesc *descriptor.DescriptorProto,
+	mode string,
+) (*jsonschema.Schema, error) {
+
+	// Validate mode
+	if mode != "oneOf" {
+		return nil, fmt.Errorf("invalid oneof_convert_into value '%s'. Must be exactly 'oneOf'", mode)
+	}
+
+	// Check message has at least one oneof
+	if len(msgDesc.OneofDecl) == 0 {
+		return nil, fmt.Errorf("message has oneof_convert_into option but contains no oneof fields")
+	}
+
+	// Check message has exactly one oneof
+	if len(msgDesc.OneofDecl) > 1 {
+		return nil, fmt.Errorf("message with oneof_convert_into can only contain one oneof group, found %d", len(msgDesc.OneofDecl))
+	}
+
+	oneofDecl := msgDesc.OneofDecl[0]
+	oneofName := oneofDecl.GetName()
+
+	// Separate oneof fields from common fields
+	var oneofFields []*descriptor.FieldDescriptorProto
+	var commonFields []*descriptor.FieldDescriptorProto
+
+	for _, field := range msgDesc.Field {
+		if field.OneofIndex != nil && int(*field.OneofIndex) == 0 {
+			oneofFields = append(oneofFields, field)
+		} else {
+			commonFields = append(commonFields, field)
+		}
+	}
+
+	// Check for conflicting options with common fields
+	if len(commonFields) > 0 {
+		if opts := msgDesc.GetOptions(); opts != nil && proto.HasExtension(opts, protoc_gen_jsonschema.E_MessageOptions) {
+			if opt := proto.GetExtension(opts, protoc_gen_jsonschema.E_MessageOptions); opt != nil {
+				if messageOptions, ok := opt.(*protoc_gen_jsonschema.MessageOptions); ok {
+					if messageOptions.GetDisallowAdditionalProperties() {
+						return nil, fmt.Errorf("cannot use disallow_additional_properties with oneof_convert_into when message has additional fields")
+					}
+				}
+			}
+		}
+	}
+
+	// Get nested messages (for definitions)
+	duplicatedMessages, err := c.findNestedMessages(curPkg, msgDesc)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build definitions for all referenced types
+	definitions := jsonschema.Definitions{}
+	for refmsgDesc, nameWithPackage := range duplicatedMessages {
+		// Skip the root message itself - we'll add it later with the oneOf schema
+		if refmsgDesc == msgDesc {
+			continue
+		}
+
+		var typeName string
+		if c.Flags.TypeNamesWithNoPackage {
+			typeName = refmsgDesc.GetName()
+		} else {
+			typeName = nameWithPackage
+		}
+		refType, err := c.recursiveConvertMessageType(curPkg, refmsgDesc, "", duplicatedMessages, true)
+		if err != nil {
+			return nil, err
+		}
+		definitions[typeName] = refType
+	}
+
+	// Detect discriminator
+	discriminatorField, discriminatorValues, err := c.detectDiscriminator(oneofName, oneofFields, curPkg)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build oneOf array with references to each variant
+	var variantRefs []*jsonschema.Type
+	for _, field := range oneofFields {
+		var typeName string
+		if c.Flags.TypeNamesWithNoPackage {
+			// Extract just the message name from the type name
+			parts := strings.Split(field.GetTypeName(), ".")
+			typeName = parts[len(parts)-1]
+		} else {
+			// Use full package.MessageName
+			typeName = strings.TrimPrefix(field.GetTypeName(), ".")
+		}
+
+		ref := &jsonschema.Type{
+			Ref: fmt.Sprintf("#/definitions/%s", typeName),
+		}
+		variantRefs = append(variantRefs, ref)
+	}
+
+	// If discriminator is detected, apply const values to variant schemas
+	if discriminatorField != "" {
+		for i, field := range oneofFields {
+			constValue := discriminatorValues[field.GetName()]
+
+			// Find the variant message in definitions and add const to discriminator field
+			var typeName string
+			if c.Flags.TypeNamesWithNoPackage {
+				parts := strings.Split(field.GetTypeName(), ".")
+				typeName = parts[len(parts)-1]
+			} else {
+				typeName = strings.TrimPrefix(field.GetTypeName(), ".")
+			}
+
+			if variantType, ok := definitions[typeName]; ok {
+				// Add const to the discriminator field
+				if variantType.Properties != nil {
+					if discFieldRaw, present := variantType.Properties.Get(discriminatorField); present {
+						if discField, ok := discFieldRaw.(*jsonschema.Type); ok {
+							if discField.Extras == nil {
+								discField.Extras = make(map[string]interface{})
+							}
+							discField.Extras["const"] = constValue
+							c.schemaVersion = "http://json-schema.org/draft-06/schema#"
+						}
+					}
+				}
+
+				// Make discriminator field required
+				if !contains(variantType.Required, discriminatorField) {
+					variantType.Required = append(variantType.Required, discriminatorField)
+				}
+			}
+			_ = i // unused variable
+		}
+	}
+
+	// Build the main schema type
+	var mainType *jsonschema.Type
+
+	if len(commonFields) == 0 {
+		// Pure oneOf: just the oneOf array
+		mainType = &jsonschema.Type{
+			OneOf: variantRefs,
+		}
+	} else {
+		// Hybrid: allOf with common properties + oneOf
+
+		// Build common properties schema
+		commonProps := &jsonschema.Type{
+			Type:       gojsonschema.TYPE_OBJECT,
+			Properties: orderedmap.New(),
+		}
+
+		// Convert common fields
+		for _, field := range commonFields {
+			// Use default message flags for common fields
+			messageFlags := ConverterFlags{}
+			propSchema, err := c.convertField(curPkg, field, msgDesc, duplicatedMessages, messageFlags)
+			if err != nil {
+				return nil, err
+			}
+			commonProps.Properties.Set(field.GetName(), propSchema)
+		}
+
+		// Apply safe message options to common properties
+		if opts := msgDesc.GetOptions(); opts != nil && proto.HasExtension(opts, protoc_gen_jsonschema.E_MessageOptions) {
+			if opt := proto.GetExtension(opts, protoc_gen_jsonschema.E_MessageOptions); opt != nil {
+				if messageOptions, ok := opt.(*protoc_gen_jsonschema.MessageOptions); ok {
+					if messageOptions.GetAllFieldsRequired() {
+						for _, field := range commonFields {
+							commonProps.Required = append(commonProps.Required, field.GetName())
+						}
+					}
+				}
+			}
+		}
+
+		commonProps.AdditionalProperties = []byte("true")
+
+		// Combine common properties with oneOf
+		mainType = &jsonschema.Type{
+			AllOf: []*jsonschema.Type{
+				commonProps,
+				{OneOf: variantRefs},
+			},
+		}
+	}
+
+	// Determine the type name for the root message
+	var typeName string
+	if c.Flags.TypeNamesWithNoPackage {
+		typeName = msgDesc.GetName()
+	} else {
+		typeName = fmt.Sprintf("%s.%s", curPkg.name, msgDesc.GetName())
+	}
+
+	// Add the main type to definitions
+	definitions[typeName] = mainType
+
+	// Build the final schema
+	newJSONSchema := &jsonschema.Schema{
+		Type: &jsonschema.Type{
+			Ref:     fmt.Sprintf("%s%s", c.refPrefix, typeName),
+			Version: c.schemaVersion,
+		},
+		Definitions: definitions,
+	}
+
+	return newJSONSchema, nil
+}
+
+// convertMessageTypeWithOneOf builds a oneOf Type for messages used as nested types
+// Unlike convertMessageWithOneOf, this returns just a Type (not a Schema with definitions)
+// because nested messages are handled by the parent's definition gathering
+func (c *Converter) convertMessageTypeWithOneOf(
+	curPkg *ProtoPackage,
+	msgDesc *descriptor.DescriptorProto,
+	mode string,
+) (*jsonschema.Type, error) {
+
+	// Validate mode
+	if mode != "oneOf" {
+		return nil, fmt.Errorf("invalid oneof_convert_into value '%s'. Must be exactly 'oneOf'", mode)
+	}
+
+	// Check message has at least one oneof
+	if len(msgDesc.OneofDecl) == 0 {
+		return nil, fmt.Errorf("message has oneof_convert_into option but contains no oneof fields")
+	}
+
+	// Check message has exactly one oneof
+	if len(msgDesc.OneofDecl) > 1 {
+		return nil, fmt.Errorf("message with oneof_convert_into can only contain one oneof group, found %d", len(msgDesc.OneofDecl))
+	}
+
+	// Separate oneof fields from common fields
+	var oneofFields []*descriptor.FieldDescriptorProto
+	var commonFields []*descriptor.FieldDescriptorProto
+
+	for _, field := range msgDesc.Field {
+		if field.OneofIndex != nil && int(*field.OneofIndex) == 0 {
+			oneofFields = append(oneofFields, field)
+		} else {
+			commonFields = append(commonFields, field)
+		}
+	}
+
+	// Check for conflicting options with common fields
+	if len(commonFields) > 0 {
+		if opts := msgDesc.GetOptions(); opts != nil && proto.HasExtension(opts, protoc_gen_jsonschema.E_MessageOptions) {
+			if opt := proto.GetExtension(opts, protoc_gen_jsonschema.E_MessageOptions); opt != nil {
+				if messageOptions, ok := opt.(*protoc_gen_jsonschema.MessageOptions); ok {
+					if messageOptions.GetDisallowAdditionalProperties() {
+						return nil, fmt.Errorf("cannot use disallow_additional_properties with oneof_convert_into when message has additional fields")
+					}
+				}
+			}
+		}
+	}
+
+	// Build oneOf array with references to each variant
+	var variantRefs []*jsonschema.Type
+	for _, field := range oneofFields {
+		var typeName string
+		if c.Flags.TypeNamesWithNoPackage {
+			// Extract just the message name from the type name
+			parts := strings.Split(field.GetTypeName(), ".")
+			typeName = parts[len(parts)-1]
+		} else {
+			// Use full package.MessageName
+			typeName = strings.TrimPrefix(field.GetTypeName(), ".")
+		}
+
+		ref := &jsonschema.Type{
+			Ref: fmt.Sprintf("#/definitions/%s", typeName),
+		}
+		variantRefs = append(variantRefs, ref)
+	}
+
+	// Build the oneOf type
+	var oneOfType *jsonschema.Type
+
+	if len(commonFields) == 0 {
+		// Pure oneOf: just the oneOf array
+		oneOfType = &jsonschema.Type{
+			OneOf: variantRefs,
+		}
+	} else {
+		// Hybrid: allOf with common properties + oneOf
+
+		// Build common properties schema
+		commonProps := &jsonschema.Type{
+			Type:       gojsonschema.TYPE_OBJECT,
+			Properties: orderedmap.New(),
+		}
+
+		// Get nested messages for field conversion
+		duplicatedMessages, err := c.findNestedMessages(curPkg, msgDesc)
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert common fields
+		for _, field := range commonFields {
+			// Use default message flags for common fields
+			messageFlags := ConverterFlags{}
+			propSchema, err := c.convertField(curPkg, field, msgDesc, duplicatedMessages, messageFlags)
+			if err != nil {
+				return nil, err
+			}
+			commonProps.Properties.Set(field.GetName(), propSchema)
+		}
+
+		// Apply safe message options to common properties
+		if opts := msgDesc.GetOptions(); opts != nil && proto.HasExtension(opts, protoc_gen_jsonschema.E_MessageOptions) {
+			if opt := proto.GetExtension(opts, protoc_gen_jsonschema.E_MessageOptions); opt != nil {
+				if messageOptions, ok := opt.(*protoc_gen_jsonschema.MessageOptions); ok {
+					if messageOptions.GetAllFieldsRequired() {
+						for _, field := range commonFields {
+							commonProps.Required = append(commonProps.Required, field.GetName())
+						}
+					}
+				}
+			}
+		}
+
+		commonProps.AdditionalProperties = []byte("true")
+
+		// Combine common properties with oneOf
+		oneOfType = &jsonschema.Type{
+			AllOf: []*jsonschema.Type{
+				commonProps,
+				{OneOf: variantRefs},
+			},
+		}
+	}
+
+	// Add title and description
+	if src := c.sourceInfo.GetMessage(msgDesc); src != nil {
+		oneOfType.Title, oneOfType.Description = c.formatTitleAndDescription(strPtr(msgDesc.GetName()), src)
+	}
+
+	return oneOfType, nil
+}
+
+// detectDiscriminator checks if all oneof variant messages have a field matching the oneof group name
+// and returns the discriminator field name and values for each variant
+func (c *Converter) detectDiscriminator(
+	oneofName string,
+	oneofFields []*descriptor.FieldDescriptorProto,
+	pkg *ProtoPackage,
+) (discriminatorField string, values map[string]interface{}, err error) {
+
+	values = make(map[string]interface{})
+
+	// Track discriminator type across all variants
+	var discriminatorType descriptor.FieldDescriptorProto_Type
+	allHaveDiscriminator := true
+
+	for i, oneofField := range oneofFields {
+		// Get the variant message descriptor
+		variantMsg, _, foundMsg := c.lookupType(pkg, oneofField.GetTypeName())
+		if !foundMsg {
+			return "", nil, fmt.Errorf("variant message type not found: %s", oneofField.GetTypeName())
+		}
+
+		var foundDiscriminator bool
+		var fieldType descriptor.FieldDescriptorProto_Type
+
+		// Check if this variant has a field matching the oneof group name
+		for _, field := range variantMsg.GetField() {
+			if field.GetName() == oneofName {
+				foundDiscriminator = true
+				fieldType = field.GetType()
+
+				// Check for explicit const value in field options
+				if opt := proto.GetExtension(field.GetOptions(), protoc_gen_jsonschema.E_FieldOptions); opt != nil {
+					if fieldOptions, ok := opt.(*protoc_gen_jsonschema.FieldOptions); ok && fieldOptions != nil {
+						if constVal := fieldOptions.GetConst(); constVal != "" {
+							parsed, parseErr := parseConstValue(constVal, fieldType)
+							if parseErr != nil {
+								return "", nil, fmt.Errorf("cannot parse const value '%s' as type %s for discriminator field '%s': %w",
+									constVal, fieldType, oneofName, parseErr)
+							}
+							values[oneofField.GetName()] = parsed
+						}
+					}
+				}
+
+				// Fallback: infer from oneof field name
+				if values[oneofField.GetName()] == nil {
+					values[oneofField.GetName()] = oneofField.GetName()
+				}
+
+				break
+			}
+		}
+
+		if !foundDiscriminator {
+			allHaveDiscriminator = false
+			break
+		}
+
+		// Check type consistency across variants
+		if i == 0 {
+			discriminatorType = fieldType
+		} else if discriminatorType != fieldType {
+			return "", nil, fmt.Errorf(
+				"discriminator field '%s' has inconsistent types across oneof variants (found: %s and %s)",
+				oneofName, discriminatorType, fieldType,
+			)
+		}
+	}
+
+	if !allHaveDiscriminator {
+		// No discriminator, use structural oneOf
+		return "", nil, nil
+	}
+
+	return oneofName, values, nil
 }

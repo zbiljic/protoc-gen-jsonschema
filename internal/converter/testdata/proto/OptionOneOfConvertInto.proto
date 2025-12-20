@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package samples;
+
+import "options.proto";
+
+// Pure oneOf with explicit const discriminators
+message StorageConfig {
+  option (protoc.gen.jsonschema.message_options).oneof_convert_into = "oneOf";
+
+  oneof backend {
+    S3Config s3 = 1;
+    LocalConfig local = 2;
+    GcsConfig gcs = 3;
+  }
+}
+
+message S3Config {
+  option (protoc.gen.jsonschema.message_options).disallow_additional_properties = true;
+
+  string backend = 1 [
+    (protoc.gen.jsonschema.field_options).required = true,
+    (protoc.gen.jsonschema.field_options).const = "s3"
+  ];
+  string bucket = 2;
+  string region = 3;
+  string access_key_id = 4;
+}
+
+message LocalConfig {
+  option (protoc.gen.jsonschema.message_options).disallow_additional_properties = true;
+
+  string backend = 1 [
+    (protoc.gen.jsonschema.field_options).required = true,
+    (protoc.gen.jsonschema.field_options).const = "local"
+  ];
+  string base_path = 2;
+}
+
+message GcsConfig {
+  option (protoc.gen.jsonschema.message_options).disallow_additional_properties = true;
+
+  string backend = 1 [
+    (protoc.gen.jsonschema.field_options).required = true,
+    (protoc.gen.jsonschema.field_options).const = "gcs"
+  ];
+  string bucket = 2;
+  string project_id = 3;
+}
+
+// Hybrid with common properties
+message StorageConfigWithPolicy {
+  option (protoc.gen.jsonschema.message_options).oneof_convert_into = "oneOf";
+  option (protoc.gen.jsonschema.message_options).all_fields_required = true;
+
+  oneof backend {
+    S3Config s3 = 1;
+    LocalConfig local = 2;
+    GcsConfig gcs = 3;
+  }
+
+  // Common policy fields that apply to all storage backends
+  int32 retention_days = 4;
+  bool encryption_enabled = 5;
+  int64 max_file_size_bytes = 6;
+}

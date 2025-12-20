@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/S3Config",
+    "definitions": {
+        "S3Config": {
+            "required": [
+                "backend"
+            ],
+            "properties": {
+                "backend": {
+                    "type": "string",
+                    "const": "s3"
+                },
+                "bucket": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "access_key_id": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "title": "S 3 Config"
+        }
+    }
+}

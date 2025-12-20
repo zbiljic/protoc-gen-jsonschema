@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/LocalConfig",
+    "definitions": {
+        "LocalConfig": {
+            "required": [
+                "backend"
+            ],
+            "properties": {
+                "backend": {
+                    "type": "string",
+                    "const": "local"
+                },
+                "base_path": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "title": "Local Config"
+        }
+    }
+}

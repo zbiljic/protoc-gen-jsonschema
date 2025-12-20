@@ -71,6 +71,9 @@ message MessageOptions {
 
   // Messages tagged with this will have all nested enums encoded to use constants instead of simple types (supports value annotations):
   bool enums_as_constants = 5;
+
+  // Messages tagged with this will have their oneof fields converted into JSON Schema composition (valid values: "oneOf")
+  string oneof_convert_into = 6;
 }
 
 

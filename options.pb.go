@@ -221,6 +221,8 @@ type MessageOptions struct {
 	DisallowAdditionalProperties bool `protobuf:"varint,4,opt,name=disallow_additional_properties,json=disallowAdditionalProperties,proto3" json:"disallow_additional_properties,omitempty"`
 	// Messages tagged with this will have all nested enums encoded to use constants instead of simple types (supports value annotations):
 	EnumsAsConstants bool `protobuf:"varint,5,opt,name=enums_as_constants,json=enumsAsConstants,proto3" json:"enums_as_constants,omitempty"`
+	// Messages tagged with this will have their oneof fields converted into JSON Schema composition (valid values: "oneOf")
+	OneofConvertInto string `protobuf:"bytes,6,opt,name=oneof_convert_into,json=oneofConvertInto,proto3" json:"oneof_convert_into,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -288,6 +290,13 @@ func (x *MessageOptions) GetEnumsAsConstants() bool {
 		return x.EnumsAsConstants
 	}
 	return false
+}
+
+func (x *MessageOptions) GetOneofConvertInto() string {
+	if x != nil {
+		return x.OneofConvertInto
+	}
+	return ""
 }
 
 // Custom EnumOptions
@@ -449,13 +458,14 @@ const file_options_proto_rawDesc = "" +
 	"\x12_exclusive_maximum\"C\n" +
 	"\vFileOptions\x12\x16\n" +
 	"\x06ignore\x18\x01 \x01(\bR\x06ignore\x12\x1c\n" +
-	"\textension\x18\x02 \x01(\tR\textension\"\xf8\x01\n" +
+	"\textension\x18\x02 \x01(\tR\textension\"\xa6\x02\n" +
 	"\x0eMessageOptions\x12\x16\n" +
 	"\x06ignore\x18\x01 \x01(\bR\x06ignore\x12.\n" +
 	"\x13all_fields_required\x18\x02 \x01(\bR\x11allFieldsRequired\x12*\n" +
 	"\x11allow_null_values\x18\x03 \x01(\bR\x0fallowNullValues\x12D\n" +
 	"\x1edisallow_additional_properties\x18\x04 \x01(\bR\x1cdisallowAdditionalProperties\x12,\n" +
-	"\x12enums_as_constants\x18\x05 \x01(\bR\x10enumsAsConstants\"\xb2\x01\n" +
+	"\x12enums_as_constants\x18\x05 \x01(\bR\x10enumsAsConstants\x12,\n" +
+	"\x12oneof_convert_into\x18\x06 \x01(\tR\x10oneofConvertInto\"\xb2\x01\n" +
 	"\vEnumOptions\x12,\n" +
 	"\x12enums_as_constants\x18\x01 \x01(\bR\x10enumsAsConstants\x121\n" +
 	"\x15enums_as_strings_only\x18\x02 \x01(\bR\x12enumsAsStringsOnly\x12*\n" +

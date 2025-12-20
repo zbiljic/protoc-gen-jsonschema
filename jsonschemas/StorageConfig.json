@@ -1,0 +1,79 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/.samples.StorageConfig",
+    "definitions": {
+        ".samples.StorageConfig": {
+            "oneOf": [
+                {
+                    "$ref": "#/definitions/samples.S3Config"
+                },
+                {
+                    "$ref": "#/definitions/samples.LocalConfig"
+                },
+                {
+                    "$ref": "#/definitions/samples.GcsConfig"
+                }
+            ]
+        },
+        "samples.GcsConfig": {
+            "required": [
+                "backend"
+            ],
+            "properties": {
+                "backend": {
+                    "type": "string",
+                    "const": "gcs"
+                },
+                "bucket": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "title": "Gcs Config"
+        },
+        "samples.LocalConfig": {
+            "required": [
+                "backend"
+            ],
+            "properties": {
+                "backend": {
+                    "type": "string",
+                    "const": "local"
+                },
+                "base_path": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "title": "Local Config"
+        },
+        "samples.S3Config": {
+            "required": [
+                "backend"
+            ],
+            "properties": {
+                "backend": {
+                    "type": "string",
+                    "const": "s3"
+                },
+                "bucket": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "access_key_id": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false,
+            "type": "object",
+            "title": "S 3 Config"
+        }
+    }
+}
