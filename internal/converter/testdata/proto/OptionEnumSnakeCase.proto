@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package samples;
+
+import "options.proto";
+
+// Test enum with snake_case formatting enabled
+enum ApiStatus {
+  option (protoc.gen.jsonschema.enum_options).enums_as_strings_only = true;
+  option (protoc.gen.jsonschema.enum_options).enums_trim_prefix = true;
+  option (protoc.gen.jsonschema.enum_options).enums_as_snake_case = true;
+
+  API_STATUS_UNSPECIFIED = 0;
+  API_STATUS_PENDING = 1;
+  API_STATUS_IN_PROGRESS = 2;
+  API_STATUS_COMPLETED = 3;
+  API_STATUS_FAILED = 4;
+  API_STATUS_CANCELLED = 5;
+}
+
+// Test enum with snake_case but no trim_prefix
+enum RequestType {
+  option (protoc.gen.jsonschema.enum_options).enums_as_strings_only = true;
+  option (protoc.gen.jsonschema.enum_options).enums_as_snake_case = true;
+
+  REQUEST_TYPE_UNSPECIFIED = 0;
+  REQUEST_TYPE_GET = 1;
+  REQUEST_TYPE_POST = 2;
+  REQUEST_TYPE_PUT = 3;
+  REQUEST_TYPE_DELETE = 4;
+}
+
+// Test enum without snake_case (control case)
+enum Priority {
+  option (protoc.gen.jsonschema.enum_options).enums_as_strings_only = true;
+  option (protoc.gen.jsonschema.enum_options).enums_trim_prefix = true;
+
+  PRIORITY_UNSPECIFIED = 0;
+  PRIORITY_LOW = 1;
+  PRIORITY_MEDIUM = 2;
+  PRIORITY_HIGH = 3;
+  PRIORITY_CRITICAL = 4;
+}

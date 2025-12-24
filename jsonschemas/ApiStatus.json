@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "enum": [
+        "unspecified",
+        "pending",
+        "in_progress",
+        "completed",
+        "failed",
+        "cancelled"
+    ],
+    "type": "string",
+    "title": "Api Status",
+    "description": "Test enum with snake_case formatting enabled"
+}

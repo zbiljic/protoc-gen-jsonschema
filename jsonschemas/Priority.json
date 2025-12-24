@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "enum": [
+        "UNSPECIFIED",
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "CRITICAL"
+    ],
+    "type": "string",
+    "title": "Priority",
+    "description": "Test enum without snake_case (control case)"
+}

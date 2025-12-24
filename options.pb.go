@@ -312,6 +312,8 @@ type EnumOptions struct {
 	Ignore bool `protobuf:"varint,4,opt,name=ignore,proto3" json:"ignore,omitempty"`
 	// Enums tagged with this will have values converted to CamelCase format (after trim_prefix if enabled)
 	EnumsAsCamelCase bool `protobuf:"varint,5,opt,name=enums_as_camel_case,json=enumsAsCamelCase,proto3" json:"enums_as_camel_case,omitempty"`
+	// Enums tagged with this will have values converted to lowercase snake_case format (after trim_prefix if enabled)
+	EnumsAsSnakeCase bool `protobuf:"varint,6,opt,name=enums_as_snake_case,json=enumsAsSnakeCase,proto3" json:"enums_as_snake_case,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -377,6 +379,13 @@ func (x *EnumOptions) GetIgnore() bool {
 func (x *EnumOptions) GetEnumsAsCamelCase() bool {
 	if x != nil {
 		return x.EnumsAsCamelCase
+	}
+	return false
+}
+
+func (x *EnumOptions) GetEnumsAsSnakeCase() bool {
+	if x != nil {
+		return x.EnumsAsSnakeCase
 	}
 	return false
 }
@@ -534,13 +543,14 @@ const file_options_proto_rawDesc = "" +
 	"\x11allow_null_values\x18\x03 \x01(\bR\x0fallowNullValues\x12D\n" +
 	"\x1edisallow_additional_properties\x18\x04 \x01(\bR\x1cdisallowAdditionalProperties\x12,\n" +
 	"\x12enums_as_constants\x18\x05 \x01(\bR\x10enumsAsConstants\x12,\n" +
-	"\x12oneof_convert_into\x18\x06 \x01(\tR\x10oneofConvertInto\"\xe1\x01\n" +
+	"\x12oneof_convert_into\x18\x06 \x01(\tR\x10oneofConvertInto\"\x90\x02\n" +
 	"\vEnumOptions\x12,\n" +
 	"\x12enums_as_constants\x18\x01 \x01(\bR\x10enumsAsConstants\x121\n" +
 	"\x15enums_as_strings_only\x18\x02 \x01(\bR\x12enumsAsStringsOnly\x12*\n" +
 	"\x11enums_trim_prefix\x18\x03 \x01(\bR\x0fenumsTrimPrefix\x12\x16\n" +
 	"\x06ignore\x18\x04 \x01(\bR\x06ignore\x12-\n" +
-	"\x13enums_as_camel_case\x18\x05 \x01(\bR\x10enumsAsCamelCase\"(\n" +
+	"\x13enums_as_camel_case\x18\x05 \x01(\bR\x10enumsAsCamelCase\x12-\n" +
+	"\x13enums_as_snake_case\x18\x06 \x01(\bR\x10enumsAsSnakeCase\"(\n" +
 	"\x10EnumValueOptions\x12\x14\n" +
 	"\x05const\x18\x01 \x01(\tR\x05const:h\n" +
 	"\rfield_options\x12\x1d.google.protobuf.FieldOptions\x18\xe5\b \x01(\v2#.protoc.gen.jsonschema.FieldOptionsR\ffieldOptions:d\n" +

@@ -56,6 +56,7 @@ type ConverterFlags struct {
 	EnumsAsStringsOnly           bool
 	EnumsTrimPrefix              bool
 	EnumsAsCamelCase             bool
+	EnumsAsSnakeCase             bool
 	KeepNewLinesInDescription    bool
 	PrefixSchemaFilesWithPackage bool
 	UseJSONFieldnamesOnly        bool
@@ -175,6 +176,11 @@ func (c *Converter) convertEnumType(enum *descriptor.EnumDescriptorProto, conver
 					converterFlags.EnumsAsCamelCase = true
 				}
 
+				// ENUM values as snake_case:
+				if enumOptions.GetEnumsAsSnakeCase() {
+					converterFlags.EnumsAsSnakeCase = true
+				}
+
 				// If this particular ENUM is marked with the "ignore" option then return a skipped error:
 				if enumOptions.GetIgnore() {
 					c.logger.WithField("msg_name", enum.GetName()).Debug("Skipping ignored enum")
@@ -230,6 +236,11 @@ func (c *Converter) convertEnumType(enum *descriptor.EnumDescriptorProto, conver
 		// If enum values should be converted to CamelCase:
 		if converterFlags.EnumsAsCamelCase {
 			valueName = toCamelCase(valueName)
+		}
+
+		// If enum values should be converted to snake_case:
+		if converterFlags.EnumsAsSnakeCase {
+			valueName = strings.ToLower(valueName)
 		}
 
 		// Check for per-value const override:

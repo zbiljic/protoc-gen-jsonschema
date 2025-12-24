@@ -1,0 +1,13 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "enum": [
+        "request_type_unspecified",
+        "request_type_get",
+        "request_type_post",
+        "request_type_put",
+        "request_type_delete"
+    ],
+    "type": "string",
+    "title": "Request Type",
+    "description": "Test enum with snake_case but no trim_prefix"
+}
